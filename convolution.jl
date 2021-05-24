@@ -29,6 +29,27 @@ function Lorentzian(x:: StepRangeLen{Float64}, x0:: Float64, fwhm:: T) where {T<
 end
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function convolve_signal(S:: Matrix{Float64}, fwhm:: T, time:: StepRangeLen{Float64}, Flag:: Int) where {T<:Union{Float64, Int64}} 
 
     nr:: Int64, nc:: Int64 = size(S)
