@@ -19,21 +19,29 @@ function run_conv(savemat:: Bool)
     fwhm = 150.0
     tvec = 0:0.5:1000
     Flag = 0
-    conv, tconv, K = convolve(signal, tvec, fwhm, Flag)
+    conv = convolve(signal, tvec, fwhm, Flag)
     
-    tconv = collect(tconv)
+    #tconv = collect(tconv)
 
     if savemat
         file = matopen("convolution.mat", "w")
         write(file, "q", qAng)
-        write(file, "tconv", tconv)
+        #write(file, "tconv", tconv)
         write(file, "conv_signal", conv)
-        write(file, "kernel", K)
+        #write(file, "kernel", K)
         close(file)
 
     else
-        return conv, tconv, qAng, K
+        return conv, qAng
     end
+end
+
+function wrapper()
+    signal = rand(670, 2001)
+    tvec = 0:0.5:1000
+    fwhm = 150.0
+    Flag = 0
+    conv = convolve(signal, tvec, fwhm, Flag)
 end
 
 
@@ -81,7 +89,7 @@ function convolve(S:: Matrix{Float64}, time:: StepRangeLen{Float64}, fwhm:: Floa
     padend:: Int64 = (duration/dt) # index at which 0 padding ends and signal starts
     padstart:: Int64 = (padend + tmax / dt) # index where signal ends and padding starts
 
-    K = generate_kernel(tconv, fwhm, tconv[padstart], ctype)
+    K = generate_kernel(tconv, fwhm, tconv[padend], ctype)
 
     sC = zeros(Float64, nr, ntc)
     sC[1:nr, 1:padend] .= @view S[1:nr, 1] # extended and pad signal
@@ -91,13 +99,15 @@ function convolve(S:: Matrix{Float64}, time:: StepRangeLen{Float64}, fwhm:: Floa
     conv = zeros(Float64, nr, ntc)
     conv = convolution_integral(sC, K, dt)
 
-    return conv, tconv, K
+    S .= conv[:, 1:nt] # return convoluted signal w same original size
+
+    return S 
     end
 
 
 function convolution_integral(signal:: Matrix{Float64}, kernel:: Matrix{Float64}, dt:: Float64)
     LinearAlgebra.BLAS.set_num_threads(Sys.CPU_THREADS)
-    conv = signal * kernel'
+    conv = signal * kernel
     conv .*= dt
     return conv 
 end
